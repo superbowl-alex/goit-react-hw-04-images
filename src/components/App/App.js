@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import OnlyScroll from 'only-scrollbar';
@@ -19,57 +19,51 @@ new OnlyScroll(document.scrollingElement, {
   damping: 0.8,
 });
 
-export class App extends Component {
-  state = {
-    page: 1,
-    query: '',
-    items: [],
-    isLoading: false,
-    error: false,
-    endOfCollection: false,
-  };
+export function App() {
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [endOfCollection, setEndOfCollection] = useState(false);
 
-  async componentDidUpdate(_, prevState) {
-    const { page, query } = this.state;
-    const { page: prevPage, query: prevQuery } = prevState;
-    if (prevPage !== page || prevQuery !== query) {
-      this.setState({ isLoading: true });
+  useEffect(() => {
+    if (query === '') {
+      return;
+    }
+    setIsLoading(true);
+    async function fetchImages() {
       try {
         const response = await fetchImagesWithQuery(query, page);
         const images = response.hits;
-        this.validationData(images);
+        validationData(images);
         const totalPages = Math.ceil(response.totalHits / HITS_PER_PAGE);
-        this.checkEndCollection(page, totalPages);
-        this.setState(({ items }) => ({
-          items: [...items, ...images],
-        }));
+        checkEndCollection(page, totalPages);
+        setItems(items => [...items, ...images]);
       } catch (error) {
-        this.setState({ error: true });
+        setError(true);
         console.log(error);
       } finally {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       }
     }
-  }
+    fetchImages();
+  }, [page, query]);
 
-  formSubmitHandler = data => {
-    this.setState({
-      page: 1,
-      query: data.search.trim(),
-      items: [],
-      isLoading: false,
-      error: false,
-      endOfCollection: false,
-    });
+  const formSubmitHandler = data => {
+    setPage(1);
+    setQuery(data.search.trim());
+    setItems([]);
+    setIsLoading(false);
+    setError(false);
+    setEndOfCollection(false);
   };
 
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const loadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  validationData = data => {
+  const validationData = data => {
     if (data.length === 0) {
       toast.warn(
         ' Sorry, there are no images matching your search query. Please try again.',
@@ -80,30 +74,26 @@ export class App extends Component {
     }
   };
 
-  checkEndCollection = (currentPage, total) => {
+  const checkEndCollection = (currentPage, total) => {
     if (currentPage === total) {
-      this.setState({ endOfCollection: true });
+      setEndOfCollection(true);
       toast.info("We're sorry, but you've reached the end of search results.", {
         theme: 'colored',
       });
     }
   };
 
-  render() {
-    const { items, isLoading, error, endOfCollection } = this.state;
-
-    return (
-      <Container>
-        <GlobalStyles />
-        <Searchbar onSubmit={this.formSubmitHandler} />
-        <ImageGallery items={items} />
-        {error && <ErrorMessage />}
-        {isLoading && <Loader />}
-        {items.length > 0 && !endOfCollection && (
-          <Button loadMore={this.loadMore} isSubmitting={isLoading} />
-        )}
-        <ToastContainer />
-      </Container>
-    );
-  }
+  return (
+    <Container>
+      <GlobalStyles />
+      <Searchbar onSubmit={formSubmitHandler} />
+      <ImageGallery items={items} />
+      {error && <ErrorMessage />}
+      {isLoading && <Loader />}
+      {items.length > 0 && !endOfCollection && (
+        <Button loadMore={loadMore} isSubmitting={isLoading} />
+      )}
+      <ToastContainer />
+    </Container>
+  );
 }
