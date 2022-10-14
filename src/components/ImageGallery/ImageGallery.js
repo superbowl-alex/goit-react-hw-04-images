@@ -1,18 +1,20 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import ImageGalleryItem from '../ImageGalleryItem';
+import { HITS_PER_PAGE } from '../../Services/fetchImages';
+
 import { Gallery } from './ImageGallery.styled';
 
-const ImageGallery = ({ items, page }) => {
+const ImageGallery = ({ items }) => {
   useEffect(() => {
-    if (page < 2) {
+    if (items.length <= HITS_PER_PAGE) {
       return;
     }
     window.scrollBy({
       top: 260 * 2,
       behavior: 'smooth',
     });
-  }, [items, page]);
+  }, [items]);
 
   return (
     <Gallery>
@@ -25,6 +27,5 @@ const ImageGallery = ({ items, page }) => {
 
 ImageGallery.propTypes = {
   items: PropTypes.array.isRequired,
-  page: PropTypes.number.isRequired,
 };
 export default ImageGallery;
