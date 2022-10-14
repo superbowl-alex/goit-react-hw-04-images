@@ -87,7 +87,7 @@ export function App() {
     <Container>
       <GlobalStyles />
       <Searchbar onSubmit={formSubmitHandler} />
-      <ImageGallery items={items} />
+      <ImageGallery items={items} page={page} />
       {error && <ErrorMessage />}
       {isLoading && <Loader />}
       {items.length > 0 && !endOfCollection && (
